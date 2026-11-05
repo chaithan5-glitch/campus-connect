@@ -49,6 +49,7 @@
     createRegistration: payload => request('/api/registrations', { method: 'POST', body: JSON.stringify(payload) }),
     getMyRegistrations: () => request('/api/me/registrations'),
     getEventRegistrations: id => request(`/api/events/${encodeURIComponent(id)}/registrations`),
+    login: payload => request('/api/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
     list,
     escapeHtml
   };

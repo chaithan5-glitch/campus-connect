@@ -14,6 +14,31 @@
   const formatDate = value => { const d = new Date(value); return Number.isNaN(d.getTime()) ? 'Date TBA' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); };
   const formatTime = value => { const d = new Date(value); return Number.isNaN(d.getTime()) ? 'Time TBA' : d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
   const showToast = message => { const toast = document.querySelector('#toast'); toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2800); };
+  const authModal = document.querySelector('#auth-modal');
+  const authError = document.querySelector('#auth-error');
+  const openAuth = message => { authError.textContent = message || ''; authModal.hidden = false; document.querySelector('#auth-email').focus(); };
+  const closeAuth = () => { authModal.hidden = true; };
+  document.querySelector('#profile-login').onclick = () => openAuth();
+  document.querySelector('#close-auth').onclick = closeAuth;
+  authModal.addEventListener('click', event => { if (event.target === authModal) closeAuth(); });
+  document.querySelector('#auth-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    authError.textContent = '';
+    const submit = event.target.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    try {
+      const result = await api.login({ email: document.querySelector('#auth-email').value, password: document.querySelector('#auth-password').value });
+      if (!result.access_token) throw new Error('Login succeeded but no access token was returned.');
+      localStorage.setItem('campus_connect_token', result.access_token);
+      document.querySelector('.profile-copy small').textContent = 'Signed in';
+      closeAuth();
+      showToast('Signed in successfully. You can register now.');
+    } catch (error) {
+      authError.textContent = error.message || 'Unable to sign in.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
   const normalizeList = body => api.list(body, 'events');
 
   function renderExplore() {
@@ -28,7 +53,7 @@
     document.querySelector('#host-event').onclick = () => showToast('Organizer tools are ready for your next event.');
   }
   function renderCard(e) { const title = eventTitle(e); const d = eventDate(e); const category = pick(e, ['category', 'type', 'event_type'], 'Campus event'); return `<article class="event-card"><div class="event-art"><div class="date-badge"><small>${d ? new Date(d).toLocaleDateString(undefined, { month: 'short' }) : 'TBA'}</small>${d && !Number.isNaN(new Date(d).getTime()) ? new Date(d).getDate() : '—'}</div><span class="art-label">${category}</span></div><div class="event-body"><h3>${title}</h3><div class="meta"><span>◷</span>${formatDate(d)} · ${formatTime(d)}</div><div class="meta"><span>⌖</span>${pick(e, ['venue', 'location', 'address'], 'Campus location TBA')}</div><div class="event-footer"><span class="tag">${pick(e, ['organizer', 'club', 'host'], 'Campus Connect')}</span><button class="secondary-button" data-register="${pick(e, ['id', 'event_id'], '')}">Register</button></div></div></article>`; }
-  async function register(id) { if (!id) return showToast('This demo event is not connected to registration yet.'); try { await api.createRegistration({ event_id: id }); showToast('Registration confirmed!'); await loadRegistrations(); } catch (error) { showToast(error.status === 401 ? 'Add your access token before registering.' : `Registration failed: ${error.message}`); } }
+  async function register(id) { if (!id) return showToast('This demo event is not connected to registration yet.'); try { await api.createRegistration({ event_id: id }); showToast('Registration confirmed!'); await loadRegistrations(); } catch (error) { if (error.status === 401) openAuth('Please sign in before registering.'); else showToast(`Registration failed: ${error.message}`); } }
   async function loadRegistrations() { try { state.registrations = api.list(await api.getMyRegistrations(), 'registrations'); } catch { state.registrations = []; } }
   function renderRegistrations() { app.innerHTML = `<div class="page-heading"><div><div class="eyebrow">Your verified passes</div><h1>My registrations</h1><p>Keep track of every event you’ve joined.</p></div></div>${state.registrations.length ? `<div class="table-card"><table class="data-table"><thead><tr><th>Event</th><th>Status</th><th>Registered</th></tr></thead><tbody>${state.registrations.map(r => `<tr><td><strong>${pick(r, ['event_title', 'title', 'event_name'], 'Campus event')}</strong></td><td><span class="tag">${pick(r, ['status'], 'Confirmed')}</span></td><td>${formatDate(pick(r, ['created_at', 'registered_at'], ''))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No registrations yet. Explore events and reserve your first pass.</div>'}`; }
   function renderOrganizer() { app.innerHTML = `<div class="page-heading"><div><div class="eyebrow">Organizer workspace</div><h1>Run better campus events</h1><p>Manage your event operations from one trusted hub.</p></div><button class="primary-button" id="new-event">＋ Create event</button></div><div class="event-grid"><div class="empty"><div class="eyebrow">Event overview</div><h3>Connect your organizer account</h3><p>Event creation and attendee management will appear here once organizer access is enabled.</p></div></div>`; document.querySelector('#new-event').onclick = () => showToast('Event creation is coming next.'); }

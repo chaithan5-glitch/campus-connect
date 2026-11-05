@@ -103,6 +103,34 @@ def proxy_registration():
 def proxy_my_registrations():
     return proxy_api('/api/me/registrations')
 
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    """Exchange Supabase email/password credentials for a user access token."""
+    payload = request.get_json(silent=True) or {}
+    email = str(payload.get('email', '')).strip()
+    password = payload.get('password', '')
+    if not email or not password:
+        return {'detail': 'Email and password are required.'}, 400
+
+    auth_url = f"{os.environ['SUPABASE_URL'].rstrip('/')}/auth/v1/token?grant_type=password"
+    auth_request = Request(
+        auth_url,
+        data=json.dumps({'email': email, 'password': password}).encode('utf-8'),
+        headers={
+            'apikey': os.environ['SUPABASE_KEY'],
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        method='POST',
+    )
+    try:
+        with urlopen(auth_request, timeout=20) as response:
+            return Response(response.read(), status=response.status, content_type='application/json')
+    except HTTPError as error:
+        return Response(error.read(), status=error.code, content_type='application/json')
+    except (URLError, TimeoutError) as error:
+        return {'detail': f'Authentication service unavailable: {error}'}, 502
+
 @app.route('/users')
 def users():
     response = supabase.table('Users').select("*").execute()
