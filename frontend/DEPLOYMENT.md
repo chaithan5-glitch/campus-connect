@@ -14,6 +14,6 @@ The backend listens on Render's `PORT` and exposes `/health`-style API traffic t
 
 ## Vercel frontend
 
-Deploy the `frontend` folder as the Vercel project root. The API client is configured for `https://campus-connect-api.onrender.com`. If your Render service URL changes, update `api-client.js` or set `window.CAMPUS_CONNECT_API_BASE_URL` before the API client loads.
+Deploy the `frontend` folder as the Vercel project root. The API client is configured for `https://campus-connect-cegp.onrender.com`. If your Render service URL changes, update `api-client.js` or set `window.CAMPUS_CONNECT_API_BASE_URL` before the API client loads.
 
 The included `vercel.json` sends direct navigation and refreshes back to `index.html`.

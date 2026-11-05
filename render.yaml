@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: campus-connect-api
+    name: campus-connect-cegp
     runtime: python
     rootDir: my-app
     buildCommand: pip install -r requirements.txt
