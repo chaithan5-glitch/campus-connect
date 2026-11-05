@@ -1,6 +1,6 @@
 (function () {
   const API_BASE_URL = window.CAMPUS_CONNECT_API_BASE_URL ||
-    (window.location.port === '5000' ? '' : 'https://your-campus-connect-api.onrender.com');
+    (window.location.port === '5000' ? '' : 'https://campus-connect-api.onrender.com');
 
   function getToken() {
     return localStorage.getItem('campus_connect_token') ||
