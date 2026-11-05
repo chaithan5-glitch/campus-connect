@@ -2,7 +2,7 @@
 
 ## Render backend
 
-Create a Render Web Service with `my-app` as the root directory. Use the included `requirements.txt`, `Procfile`, or `render.yaml`. Set these environment variables in Render:
+Create/sync the Render Web Service from the root `render.yaml`. It configures `my-app` as the service root, uses Gunicorn, and checks `/health`. Set these environment variables in Render:
 
 ```text
 SUPABASE_URL=...

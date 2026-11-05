@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: campus-connect-api
+    runtime: python
+    rootDir: my-app
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    healthCheckPath: /health
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        value: https://campus-connect-frontend-blond.vercel.app
